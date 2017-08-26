@@ -7,7 +7,7 @@ from pylistfm.sources.example import API
 class PlaylistTests(unittest.TestCase):
 
     def test_init_sources(self):
-        config = Config()
+        config = Config().load()
         config.pylistfm.sources = ['example']
-        playlist = Playlist(config.pylistfm)
+        playlist = Playlist(config.pylistfm, )
         self.assertEqual(playlist.sources, {'example': API})

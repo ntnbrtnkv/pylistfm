@@ -1,7 +1,12 @@
-from enum import Enum
+import logging
 
 
-class Modes(Enum):
-    SILENT = 's'
-    WARNING = 'w'
-    INFORMATION = 'i'
+def string_to_mode(string):
+    res = None
+    if string[0] == 's':
+        res = logging.NOTSET
+    elif string[0] == 'w':
+        res = logging.WARNING
+    elif string[0] == 'i':
+        res = logging.INFO
+    return res

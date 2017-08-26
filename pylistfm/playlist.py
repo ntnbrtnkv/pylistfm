@@ -1,15 +1,15 @@
 import codecs
 import glob
+import logging
 import importlib
 import datetime
-from pylistfm.modes import Modes
 from pylistfm.utils import Utils
 from pylistfm.sound_utils import Track, TrackUtils
 
 
 class Playlist:
-    def __init__(self, config, api_config):
-        self.mode = config.mode
+    def __init__(self, config, api_config=None):
+        logging.basicConfig(level=config.mode)
         self.config = config
         self.api_config = api_config
         self.sources = {}
@@ -17,21 +17,19 @@ class Playlist:
         self._base_dir = ""
 
     def _init_sources(self):
-        if self.mode == Modes.INFORMATION:
-            print("[Info] Initializing sources")
+        logging.info("Initializing sources")
         for source_module in self.config.sources:
             api = getattr(importlib.import_module('pylistfm.sources.{0}'.format(source_module)), 'API')
             self.sources[source_module] = api
-            if self.mode == Modes.INFORMATION:
-                print("[Info] Api {0} added".format(source_module))
+            logging.info("Api {0} added".format(source_module))
 
     def _get_tracks(self, artist):
         config = self.config
         result = {}
         for module_name, api in self.sources.items():
+            logging.info("Trying to get track from api {0}".format(module_name))
             request_result = api(self.api_config[module_name]).get_top_tracks(artist, config.limit)
-            if self.mode == Modes.INFORMATION:
-                print("[Info] Got api {0} tracks".format(module_name))
+            logging.info("Got tracks from api {0}".format(module_name))
             required_tracks = list(map(lambda it: Track(it[0], it[1]), request_result))
             result[module_name] = required_tracks
         return result
@@ -40,9 +38,11 @@ class Playlist:
         config = self.config
         local_filepaths = []
         # Trying to find all files with given filetypes in base_dir with subdirs
+        logging.info("Loading local music library")
         for _type in config.types:
             local_filepaths.extend(Utils.insensitive_glob(self._base_dir + '**/*.' + _type))
         local_files = TrackUtils.tracks_by_paths(local_filepaths)
+        logging.info("Local music library has been loaded")
 
         for file in local_files:
             for track in track_list:
@@ -58,16 +58,14 @@ class Playlist:
                     if (not track.is_found_locally() or
                             track > file):
                         track.copy_fileinfo_from(file)
-                    if config.mode == Modes.INFORMATION:
-                        print('[Info] Found song "{0}" in your collection\n'.format(track.title))
+                    logging.info('Found song "{0}" in your collection'.format(track.title))
 
     def _find_missing_albums(self, track_list):
         config = self.config
         suggested_albums = set('')
         for track in track_list:
             if not track.is_found_locally():
-                if config.mode == Modes.WARNING or config.mode == Modes.INFORMATION:
-                    print('[Error] Not found song "{0} - {1}" in your collection\n'.format(track.title, track.album.title))
+                logging.warning('Not found song "{0} - {1}" in your collection\n'.format(track.title, track.album.title))
                 if track.album is not None:
                     suggested_albums |= {track.album}
         return suggested_albums
@@ -93,8 +91,7 @@ class Playlist:
 
     def save_missing_albums(self, path_to_file, suggested_albums):
         if len(suggested_albums) > 0:
-            if self.mode == Modes.INFORMATION:
-                print('You may want to download this albums:')
+            logging.info('You may want to download this albums:')
             suggested_albums = list(suggested_albums)
 
             with codecs.open(path_to_file, 'w', 'utf-8') as f:
@@ -103,12 +100,10 @@ class Playlist:
                     f.write(alb.title + '\n')
 
     def save_m3u(self, path_to_file, track_list, music_dir):
-        if self.mode == Modes.INFORMATION:
-            print("[Info] Saving m3u file: {}".format(path_to_file))
+        logging.info("Saving m3u file: {}".format(path_to_file))
         with codecs.open(path_to_file, 'w', 'utf-8') as f:
             f.write(u'\ufeff#EXTM3U\n')
             for track in track_list:
                 if track.is_found_locally():
                     f.write(track.relative_filepath(music_dir) + "\n")
-        if self.mode == Modes.INFORMATION:
-            print("[Info] Saving completed\n")
+        logging.info("Saving completed")

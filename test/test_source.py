@@ -12,7 +12,7 @@ class SourceTests(unittest.TestCase):
         self.assertEqual(res, [('Track Name 1', 'Album Name 1'), ('Track Name 2', 'Album Name 2')])
 
     def test_lastfm_api(self):
-        config = Config()
+        config = Config().load()
         lastfm_api = LastFMAPI(config.api['lastfm'])
         res = lastfm_api.get_top_tracks('ария', 4)
         self.assertEqual(res, [('Беспечный ангел', 'Tribute to harley-davidson'),
