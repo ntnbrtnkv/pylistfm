@@ -30,10 +30,8 @@ class Config:
     def init(self):
         data = {
             "pylistfm": {
-                "dir": "D:/Music",
-                "types": [
-                    "mp3",
-                    "flac"
+                "destinations": [
+                    "local"
                 ],
                 "default_mode": "s",
                 "search_missing_albums": False,
@@ -45,6 +43,14 @@ class Config:
             "api": {
                 "lastfm": {
                     "key": "YOU_API_KEY_HERE"
+                },
+                "local": {
+                    "dir": "D:/Music",
+                    "types": [
+                        "mp3",
+                        "flac"
+                    ],
+                    "playlist_type": "m3u"
                 }
             }
         }

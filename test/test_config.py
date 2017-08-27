@@ -9,11 +9,11 @@ class ConfigTests(unittest.TestCase):
     def test_init(self):
         self.config.init()
 
-        self.assertEqual(self.config.pylistfm.dir, 'D:/Music')
-        self.assertEqual(self.config.pylistfm.types, ["mp3", "flac"])
         self.assertEqual(self.config.pylistfm.search_missing_albums, False)
         self.assertEqual(self.config.pylistfm.limit, 50)
         self.assertEqual(self.config.api['lastfm']['key'], 'YOU_API_KEY_HERE')
+        self.assertEqual(self.config.api['local']['dir'], 'D:/Music')
+        self.assertEqual(self.config.api['local']['types'], ["mp3", "flac"])
 
     def test_load(self):
         self.config.load()
@@ -23,13 +23,12 @@ class ConfigTests(unittest.TestCase):
     def test_tojson(self):
         self.config.init()
         json_string = self.config.to_json()
+        self.maxDiff = None
 
         self.assertEqual(json_string, """{
     "pylistfm": {
-        "dir": "D:/Music",
-        "types": [
-            "mp3",
-            "flac"
+        "destinations": [
+            "local"
         ],
         "default_mode": "s",
         "search_missing_albums": false,
@@ -41,6 +40,14 @@ class ConfigTests(unittest.TestCase):
     "api": {
         "lastfm": {
             "key": "YOU_API_KEY_HERE"
+        },
+        "local": {
+            "dir": "D:/Music",
+            "types": [
+                "mp3",
+                "flac"
+            ],
+            "playlist_type": "m3u"
         }
     }
 }""")

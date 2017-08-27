@@ -10,4 +10,4 @@ class PlaylistTests(unittest.TestCase):
         config = Config().load()
         config.pylistfm.sources = ['example']
         playlist = Playlist(config.pylistfm, )
-        self.assertEqual(playlist.sources, {'example': API})
+        self.assertEqual(playlist._sources, {'example': API})
