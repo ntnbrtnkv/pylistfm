@@ -1,4 +1,5 @@
 import argparse
+import logging
 import sys
 from pylistfm.modes import string_to_mode
 from pylistfm.config import Config
@@ -57,7 +58,10 @@ if _args.artist is None:
 _artist = _args.artist
 
 _parse_config_arg('mode', _config.pylistfm, func=string_to_mode)
-_parse_config_arg('dir', _config.pylistfm)
+try:
+    _parse_config_arg('dir', _config.api['local']['dir'])
+except KeyError as err:
+    logging.warning(r'Trying to set local music dir when "local" module not configured')
 _parse_config_arg('limit', _config.pylistfm)
 _parse_config_arg('search_missing_albums', _config.pylistfm)
 
