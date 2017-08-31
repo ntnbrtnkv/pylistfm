@@ -56,12 +56,13 @@ class API:
                     self._logger.info('Found song "{0}" in your collection'.format(track.title))
 
     def _find_missing_albums(self, track_list):
-        suggested_albums = set('')
-        for track in track_list:
+        suggested_albums = {}
+        for ind, track in enumerate(track_list):
             if not track.is_found:
-                self._logger.warning('Not found song "{0} - {1}" in your collection\n'.format(track.title, track.album.title))
-                if track.album is not None:
-                    suggested_albums |= {track.album}
+                self._logger.warning('Not found song [{}] "{} - {}" in your collection'.format(ind + 1, track.title, track.album.title))
+                if track.album not in suggested_albums:
+                    suggested_albums[track.album] = []
+                suggested_albums[track.album].append('\t[{}] {}'.format(ind + 1, track.title))
         return suggested_albums
 
     def process_missing_albums(self, track_list, **kwargs):
@@ -69,12 +70,14 @@ class API:
         missing_albums = self._find_missing_albums(track_list)
         if len(missing_albums) > 0:
             self._logger.warning('You may want to download this albums:')
-            missing_albums = list(missing_albums)
 
             with codecs.open(path_to_file, 'w', 'utf-8') as f:
-                for alb in missing_albums:
-                    self._logger.warning("\"{}\"".format(alb))
-                    f.write(alb.title + '\n')
+                for alb in sorted(missing_albums, key=lambda alb: len(missing_albums[alb]), reverse=True):
+                    s = "[{}] {}".format(len(missing_albums[alb]), alb)
+                    self._logger.warning(s)
+                    f.write(s + '\n')
+                    for track_name in missing_albums[alb]:
+                        f.write(track_name + '\n')
 
     def _save_m3u(self, path_to_file, track_list, music_dir):
         path_to_file += '.m3u'
