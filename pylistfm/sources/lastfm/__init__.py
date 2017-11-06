@@ -1,4 +1,5 @@
 import pylast
+import logging
 
 
 class API:
@@ -12,5 +13,9 @@ class API:
         tracks = artist.get_top_tracks(limit)
         for track in tracks:
             album = track.item.get_album()
-            results.append((track.item.title, album.title))
+            try:
+                results.append((track.item.title, album.title))
+            except AttributeError:
+                logging.warning('Cannot get album for track "{}"'.format(track.item.title))
+                results.append((track.item.title, "pylistfmError"))
         return results
