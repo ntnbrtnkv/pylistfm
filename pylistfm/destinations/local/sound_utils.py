@@ -1,5 +1,6 @@
 import os
 from mutagen.easyid3 import EasyID3
+from mutagen.id3 import ID3NoHeaderError
 from pylistfm.sound_utils import Track as DefaultTrack
 
 
@@ -24,7 +25,10 @@ class Track(DefaultTrack):
 
     def found_at(self, filepath):
         self.filepath = filepath
-        self.id3_info = EasyID3(filepath)
+        try:
+            self.id3_info = EasyID3(filepath)
+        except ID3NoHeaderError as e:
+            self.id3_info = None
         self.is_found = True
 
     @property
@@ -52,11 +56,15 @@ class Track(DefaultTrack):
 
     @id3_info.setter
     def id3_info(self, id3_info):
-        if not isinstance(id3_info, EasyID3):
+        if not (isinstance(id3_info, EasyID3) or id3_info is None):
             raise AttributeError
         self._id3_info = id3_info
-        self._id3_titles = self._id3_info['title']
-        self._id3_lowered_titles = list(map(lambda x: x.lower(), self._id3_titles))
+        if id3_info is None:
+            self._id3_titles = ['NOSET']
+            self._id3_lowered_titles = ['noset']
+        else:
+            self._id3_titles = self._id3_info['title']
+            self._id3_lowered_titles = list(map(lambda x: x.lower(), self._id3_titles))
 
     @property
     def id3_lowered_titles(self):
