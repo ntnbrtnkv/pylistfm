@@ -1,6 +1,15 @@
 import pylast
 import logging
+from uuid import UUID
 
+
+def validate_uuid4(uuid_string):
+    try:
+        UUID(uuid_string, version=4)
+    except ValueError:
+        return False
+
+    return True
 
 class API:
     def __init__(self, config=None):
@@ -8,8 +17,16 @@ class API:
 
     def get_top_tracks(self, artist_name, limit=10):
         results = []
-        request = self.network.search_for_artist(artist_name)
-        artist = request.get_next_page()[0]
+        artist = None
+
+        if validate_uuid4(artist_name):
+            artist = self.network.get_artist_by_mbid(artist_name)
+        else:
+            request = self.network.search_for_artist(artist_name)
+            artist = request.get_next_page()[0]
+
+        logging.info('Found artist "{}"'.format(artist.name))
+
         tracks = artist.get_top_tracks(limit)
         for track in tracks:
             album = track.item.get_album()

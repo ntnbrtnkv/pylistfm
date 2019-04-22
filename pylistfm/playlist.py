@@ -2,6 +2,7 @@ import logging
 import importlib
 import datetime
 from .sound_utils import Track
+from .utils import  validate_uuid4
 
 
 class Playlist:
@@ -40,14 +41,20 @@ class Playlist:
             result[module_name] = required_tracks
         return result
 
-    def create_playlist(self, artist):
+    def create_playlist(self, artist, output=None):
         now = datetime.datetime.now()
         now_date = now.strftime("%Y-%m-%d")
+        actual_artist = None
 
         # Founding all possible files by name and ID3 tags
         modules_tracks = self._get_tracks(artist)
+        if validate_uuid4(artist):
+            actual_artist = output
+        else:
+            actual_artist = artist
+
         # TODO: place for paralleling
         for s_module, track_list in modules_tracks.items():
             for d_module, api in self._destinations.items():
                 instance = api(self.config, self.api_config[d_module])
-                instance.save(now_date, track_list, artist=artist)
+                instance.save(now_date, track_list, artist=actual_artist)
