@@ -4,6 +4,7 @@ import sys
 from pylistfm.modes import string_to_mode
 from pylistfm.config import Config
 from pylistfm.playlist import Playlist
+from pylistfm.utils import create_hardlist
 
 
 _config = None
@@ -38,6 +39,7 @@ _parser.add_argument('-a', '--artist', help='artist name or musicbrainz.org id')
 _parser.add_argument('-o', '--output', help='alias for output dir', type=str)
 _parser.add_argument('-d', '--debug', help='debug mode', action='store_true')
 _parser.add_argument('-s', '--search-missing-albums', help='search missing albums', type=bool)
+_parser.add_argument('-p', '--copy-playlist', help='create hardlist by path to m3u file', type=str)
 
 _args = _parser.parse_args()
 logging.basicConfig()
@@ -65,6 +67,9 @@ Please initialize config
     _parser.print_help()
     sys.exit(1)
 
+if _args.copy_playlist is not None:
+    create_hardlist(_args.copy_playlist)
+    sys.exit(0)
 
 if _args.artist is None:
     print('Artist name is required')
