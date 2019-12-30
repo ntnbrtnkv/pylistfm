@@ -24,7 +24,8 @@ def create_hardlist(source):
         os.makedirs(dest)
     _logger.info("Creating hardlinks in destination path")
     with open(source, 'r', encoding='utf-8') as playlist_file:
-        for index, line in enumerate(list(playlist_file)[1:]):
+        tracks_files = filter(lambda line: line[0] != '#', list(playlist_file)[1:])
+        for index, line in enumerate(tracks_files):
             path = line.rstrip('\n')
             filepath = '{}/{}'.format(base_dir, path)
             filename = os.path.basename(filepath)
