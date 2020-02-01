@@ -49,7 +49,7 @@ class CacheSource:
         artistPath.mkdir(parents=True, exist_ok=True)
         filepath = artistPath / self._datestring
         with filepath.open(mode='w', encoding='utf-8') as f:
-            json.dump(data, f)
+            json.dump(data, f, indent=2)
 
     def get(self, source, artist):
         result = None
