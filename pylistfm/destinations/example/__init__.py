@@ -5,11 +5,12 @@ Package should have 'API' class with public 'save' and 'process_missing_albums' 
 
 
 class API:
-    def __init__(self, config):
+    def __init__(self, pylistfm_config, api_config):
         """Initialize your API
 
-        :param config: all parameters needed for the API"""
-        self._config = config
+        :param pylistfm_config: common parameters
+        :param api_config: current API specific parameters"""
+        pass
 
     def save(self, playlist_name, track_list, **kwargs):
         """Processes saving tracks as playlist somewhere
