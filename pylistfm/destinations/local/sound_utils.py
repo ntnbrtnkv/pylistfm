@@ -1,79 +1,100 @@
 import os
-from mutagen.easyid3 import EasyID3
-from mutagen.id3 import ID3NoHeaderError
-from pylistfm.sound_utils import Track as DefaultTrack
+from typing import List, Optional, TypedDict, cast
+from mutagen import File, flac, mp3
+from pylistfm.sound_utils import Track as DefaultTrack, Title, Album
+
+
+class TagsInfo(TypedDict):
+    album: List[str]
+    title: List[str]
+
+
+class Tags:
+    albums: List[Album] = []
+    titles: List[Title] = []
+
+
+class InfoBlock(TypedDict):
+    bitrate: int
 
 
 class Track(DefaultTrack):
-    def __init__(self, track=None):
+    def __init__(self, track: 'Track' = None):
         if track is None:
             super().__init__()
         else:
             super().__init__(track.title, track.album)
-        self._id3_titles = None
-        self._id3_lowered_titles = None
-        self._id3_info = None
-        self._local_filepath = None
-        self._lowered_filename = None
+        self._local_filepath: Optional[str] = None
+        self._lowered_filename: Optional[str] = None
+        self._tags = Tags()
+        self._bitrate: int = 0
+        self._filesize: int = 0
 
-    def copy_fileinfo_from(self, source):
+    def load_from_filepath(self, filepath: str):
+        self.filepath = filepath
+        self._filesize = os.stat(filepath).st_size
+        file = File(filepath)
+        mime = file.mime
+        tags: Optional[TagsInfo] = None
+        info: InfoBlock = InfoBlock()
+        if 'audio/mp3' in mime:
+            mp3_data = mp3.MP3(filepath)
+            tags = cast(TagsInfo, mp3_data.ID3)
+            info = cast(InfoBlock, mp3_data.info)
+        elif 'audio/flac' in mime:
+            flac_data = flac.FLAC(filepath)
+            tags = cast(TagsInfo, flac_data)
+            info = cast(InfoBlock, flac_data.info)
+        else:
+            raise TypeError
+        self._bitrate = info.bitrate
+        self._tags.titles = tags['title']
+        self._tags.albums = tags['album']
+        self.is_found = True
+
+    def is_title_same(self, title: Title) -> bool:
+        lowered_title = title.lower()
+        return lowered_title in self._tags.titles
+
+    def copy_info_from(self, source: 'Track'):
         if not isinstance(source, Track):
             raise AttributeError
         self.filepath = source.filepath
-        self.id3_info = source.id3_info
         self.is_found = source.is_found
 
-    def found_at(self, filepath):
-        self.filepath = filepath
-        try:
-            self.id3_info = EasyID3(filepath)
-        except ID3NoHeaderError as e:
-            self.id3_info = None
-        self.is_found = True
-
     @property
-    def lowered_filename(self):
-        return self._lowered_filename
-
-    def relative_filepath(self, base):
-        n = len(base)
-        return self._local_filepath[n:]
+    def filesize(self) -> int:
+        return self._filesize
 
     @property
     def filepath(self):
         return self._local_filepath
 
     @filepath.setter
-    def filepath(self, filepath):
+    def filepath(self, filepath: str):
         if not isinstance(filepath, str):
             raise AttributeError
         self._local_filepath = filepath
         self._lowered_filename = os.path.splitext(os.path.basename(filepath))[0].lower()
 
     @property
-    def id3_info(self):
-        return self._id3_info
-
-    @id3_info.setter
-    def id3_info(self, id3_info):
-        if not (isinstance(id3_info, EasyID3) or id3_info is None):
-            raise AttributeError
-        self._id3_info = id3_info
-        if id3_info is None:
-            self._id3_titles = ['NOSET']
-            self._id3_lowered_titles = ['noset']
-        else:
-            self._id3_titles = self._id3_info['title']
-            self._id3_lowered_titles = list(map(lambda x: x.lower(), self._id3_titles))
+    def bitrate(self):
+        return self._bitrate
 
     @property
-    def id3_lowered_titles(self):
-        return self._id3_lowered_titles
+    def lowered_filename(self) -> str:
+        return self._lowered_filename
 
-    def __gt__(self, other):
+    def relative_filepath(self, base: str):
+        n = len(base)
+        # Make more safe
+        return self._local_filepath[n:]
+
+    def __gt__(self, other: 'Track'):
         if isinstance(other, Track):
-            return (self.lowered_filename > other.lowered_filename or
-                    self.id3_info.size > other.id3_info.size)
+            return (self.bitrate > other.bitrate or
+                    self.lowered_filename > other.lowered_filename or
+                    self.filesize > other.filesize)
         else:
             raise NotImplementedError
 
@@ -82,7 +103,7 @@ class TrackUtils:
     @staticmethod
     def _track_by_path(path):
         track = Track()
-        track.found_at(path)
+        track.load_from_filepath(path)
         return track
 
     @staticmethod

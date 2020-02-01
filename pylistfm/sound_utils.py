@@ -1,5 +1,12 @@
+from typing import Union
+
+
+class Title(str):
+    pass
+
+
 class Titleable:
-    def __init__(self, title=''):
+    def __init__(self, title: Title = ''):
         self._title = title
         self._lowered_title = title.lower()
 
@@ -15,8 +22,12 @@ class Titleable:
         return self.title
 
 
+class Album(str):
+    pass
+
+
 class Track(Titleable):
-    def __init__(self, title='', album=None):
+    def __init__(self, title: Title = '', album: Album = None):
         super().__init__(title)
         self.album = album
         self._is_found = False
@@ -36,7 +47,7 @@ class Track(Titleable):
         return self._album
 
     @album.setter
-    def album(self, album):
+    def album(self, album: Union[Album, str]):
         if isinstance(album, Album):
             self._album = album
         elif isinstance(album, str):
@@ -44,17 +55,3 @@ class Track(Titleable):
             self._album = album_obj
         elif album is not None:
             raise AttributeError
-
-
-class Album(Titleable):
-    def __init__(self, title=''):
-        super().__init__(title)
-
-    def __hash__(self):
-        return hash(str(self))
-
-    def __eq__(self, other):
-        if isinstance(other, Album):
-            return self.title == other.title
-        else:
-            raise NotImplementedError
