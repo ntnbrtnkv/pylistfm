@@ -2,7 +2,7 @@ import logging
 import importlib
 import datetime
 from .sound_utils import Track
-from .utils import  validate_uuid4
+from .utils import validate_uuid4, CacheSource
 
 
 class Playlist:
@@ -32,11 +32,21 @@ class Playlist:
     def _get_tracks(self, artist):
         config = self.config
         result = {}
+        cache = None
+        if (config.cache is not None):
+            cache = CacheSource(config.cache)
         # TODO: place for paralleling
         for module_name, api in self._sources.items():
-            self._logger.info("Trying to get track from api {0}".format(module_name))
-            request_result = api(self.api_config[module_name]).get_top_tracks(artist, config.limit)
-            self._logger.info("Got tracks from api {0}".format(module_name))
+            request_result = None
+            if (cache is not None and cache.has(module_name, artist)):
+                self._logger.info("Found cache for {0}".format(module_name))
+                request_result = cache.get(module_name, artist)
+            else:
+                self._logger.info("Trying to get track from api {0}".format(module_name))
+                request_result = api(self.api_config[module_name]).get_top_tracks(artist, config.limit)
+                self._logger.info("Got tracks from api {0}".format(module_name))
+                if (cache is not None):
+                    cache.save(module_name, artist, request_result)
             required_tracks = list(map(lambda it: Track(it[0], it[1]), request_result))
             result[module_name] = required_tracks
         return result

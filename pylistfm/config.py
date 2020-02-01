@@ -41,6 +41,7 @@ class Config:
                 "destinations": [
                     "local"
                 ],
+                "cache": ".cache",
                 "default_mode": "s",
                 "search_missing_albums": False,
                 "limit": 50,

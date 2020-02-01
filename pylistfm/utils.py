@@ -1,5 +1,8 @@
 import os
 import logging
+from pathlib import Path
+from datetime import date
+import json
 from uuid import UUID
 
 
@@ -31,3 +34,27 @@ def create_hardlist(source):
             filename = os.path.basename(filepath)
             os.link(filepath, '{}/{:03d} - {}'.format(dest, index, filename))
     _logger.info("Hardlist has been created")
+
+class CacheSource:
+    def __init__(self, root):
+        self._rootPath = Path(root)
+        self._rootPath.mkdir(parents=True, exist_ok=True)
+        self._datestring = date.today().strftime('%Y-%m-%d')
+
+    def has(self, source, artist):
+        return Path(self._rootPath, source, artist, self._datestring).exists()
+
+    def save(self, source, artist, data):
+        artistPath = Path(self._rootPath, source, artist)
+        artistPath.mkdir(parents=True, exist_ok=True)
+        filepath = artistPath / self._datestring
+        with filepath.open(mode='w', encoding='utf-8') as f:
+            json.dump(data, f)
+
+    def get(self, source, artist):
+        result = None
+        if (self.has(source, artist)):
+            filepath = Path(self._rootPath, source, artist, self._datestring)
+            with filepath.open(mode='r', encoding='utf-8') as f:
+                result = json.load(f)
+        return result

@@ -20,11 +20,11 @@ def _main(playlist, artist, output):
         sys.exit(0)
 
 
-def _parse_config_arg(arg_name, config, setter=lambda x: x, success=None):
+def _parse_config_arg(arg_name, config, config_attr_name=None, setter=lambda x: x, success=None):
     atr = getattr(_args, arg_name)
     if atr is not None:
         val = setter(atr)
-        setattr(config, arg_name, val)
+        setattr(config, arg_name if config_attr_name is None else config_attr_name, val)
         if callable(success):
             success(val)
 
@@ -34,6 +34,7 @@ _parser.add_argument('-m', '--mode', help='information to print', choices=['sile
 _parser.add_argument('-i', '--init', help='initialize config.json', action='store_true')
 _parser.add_argument('-l', '--limit', help='tracks limit', type=int)
 _parser.add_argument('--dir', help='base dir to search')
+_parser.add_argument('--disable-cache', help='disable cache, false by default', action='store_true')
 _parser.add_argument('-c', '--config', help='path to config', type=str)
 _parser.add_argument('-a', '--artist', help='artist name or musicbrainz.org id')
 _parser.add_argument('-o', '--output', help='alias for output dir', type=str)
@@ -75,6 +76,9 @@ if _args.artist is None:
     print('Artist name is required')
     _parser.print_usage()
     sys.exit(2)
+
+if _args.disable_cache:
+    _parse_config_arg('disable_cache', _config.pylistfm, config_attr_name='cache', setter=lambda _: None)
 
 _artist = _args.artist
 
