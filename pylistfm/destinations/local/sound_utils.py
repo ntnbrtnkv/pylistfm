@@ -38,8 +38,8 @@ class Track(DefaultTrack):
         tags: Optional[TagsInfo] = None
         info: InfoBlock = InfoBlock()
         if 'audio/mp3' in mime:
-            mp3_data = mp3.MP3(filepath)
-            tags = cast(TagsInfo, mp3_data.ID3)
+            mp3_data = mp3.EasyMP3(filepath)
+            tags = cast(TagsInfo, mp3_data)
             info = cast(InfoBlock, mp3_data.info)
         elif 'audio/flac' in mime:
             flac_data = flac.FLAC(filepath)
