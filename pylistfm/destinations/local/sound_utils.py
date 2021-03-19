@@ -1,7 +1,7 @@
 import os
 from typing import List, Optional, TypedDict, cast
 from mutagen import File, flac, mp3
-from pylistfm.sound_utils import Track as DefaultTrack, Title, Album
+from pylistfm.sound_utils import Track, Title, Album
 
 
 class TagsInfo(TypedDict):
@@ -18,8 +18,8 @@ class InfoBlock(TypedDict):
     bitrate: int
 
 
-class Track(DefaultTrack):
-    def __init__(self, track: 'Track' = None):
+class FileTrack(Track):
+    def __init__(self, track: 'FileTrack' = None):
         if track is None:
             super().__init__()
         else:
@@ -29,6 +29,7 @@ class Track(DefaultTrack):
         self._tags = Tags()
         self._bitrate: int = 0
         self._filesize: int = 0
+        self._filename: str = ''
 
     def load_from_filepath(self, filepath: str):
         self.filepath = filepath
@@ -50,14 +51,19 @@ class Track(DefaultTrack):
         self._bitrate = info.bitrate
         self._tags.titles = tags['title']
         self._tags.albums = tags['album']
+        self.title = self._tags.titles[0]
         self.is_found = True
+        self._filename = os.path.basename(filepath)
 
-    def is_title_same(self, title: Title) -> bool:
+    def _lowered_titles(self):
+        return [title.lower() for title in self._tags.titles]
+
+    def is_same_title(self, title: Title) -> bool:
         lowered_title = title.lower()
-        return lowered_title in self._tags.titles
+        return lowered_title in self._lowered_titles() or lowered_title in self._filename.lower()
 
-    def copy_info_from(self, source: 'Track'):
-        if not isinstance(source, Track):
+    def copy_info_from(self, source: 'FileTrack'):
+        if not isinstance(source, FileTrack):
             raise AttributeError
         self.filepath = source.filepath
         self.is_found = source.is_found
@@ -90,8 +96,8 @@ class Track(DefaultTrack):
         # Make more safe
         return self._local_filepath[n:]
 
-    def __gt__(self, other: 'Track'):
-        if isinstance(other, Track):
+    def __gt__(self, other: 'FileTrack'):
+        if isinstance(other, FileTrack):
             return (self.bitrate > other.bitrate or
                     self.lowered_filename > other.lowered_filename or
                     self.filesize > other.filesize)
@@ -102,7 +108,7 @@ class Track(DefaultTrack):
 class TrackUtils:
     @staticmethod
     def _track_by_path(path):
-        track = Track()
+        track = FileTrack()
         track.load_from_filepath(path)
         return track
 

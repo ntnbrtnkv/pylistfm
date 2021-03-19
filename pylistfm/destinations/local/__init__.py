@@ -3,7 +3,7 @@ import logging
 import codecs
 import glob
 from .utils import Utils
-from .sound_utils import TrackUtils, Track
+from .sound_utils import TrackUtils, FileTrack
 
 
 class API:
@@ -20,7 +20,7 @@ class API:
         self._base_dir = self._dir + "/*" + ''.join(map(Utils.either, artist)) + "*/"
         music_dir = glob.glob(self._base_dir)[0]
 
-        files_tracks = list(map(lambda tr: Track(tr), track_list))
+        files_tracks = list(map(lambda tr: FileTrack(tr), track_list))
 
         self._find_local_tracks(files_tracks)
 
@@ -30,7 +30,7 @@ class API:
         func = getattr(self, '_save_' + self._playlist_type)
         func(music_dir + playlist_name + '_pylistfm', files_tracks, music_dir)
 
-    def _find_local_tracks(self, track_list: List[Track]):
+    def _find_local_tracks(self, track_list: List[FileTrack]):
         local_filepaths = []
         # Trying to find all files with given filetypes in base_dir with subdirs
         self._logger.info("Loading local music library")
@@ -41,16 +41,13 @@ class API:
 
         for local_track in local_tracks:
             for track in track_list:
-                lowered_track_title = track.lowered_title
-                found_by_file = lowered_track_title in local_track.filepath.lower()
-                found_by_tag = local_track.is_title_same(lowered_track_title)
-                if found_by_file or found_by_tag:
-                    if (not track.is_found or
-                            track > local_track):
-                        track.copy_info_from(local_track)
+                lowered_track_title = track.title
+                found = local_track.is_same_title(lowered_track_title)
+                if found:
+                    track.copy_info_from(local_track)
                     self._logger.info('Found song "{0}" in your collection'.format(track.title))
 
-    def _find_missing_albums(self, track_list: List[Track]):
+    def _find_missing_albums(self, track_list: List[FileTrack]):
         suggested_albums = {}
         for ind, track in enumerate(track_list):
             if not track.is_found:
@@ -75,7 +72,7 @@ class API:
                     for track_name in missing_albums[alb]:
                         f.write(track_name + '\n')
 
-    def _save_m3u(self, path_to_file: str, track_list: List[Track], music_dir: str):
+    def _save_m3u(self, path_to_file: str, track_list: List[FileTrack], music_dir: str):
         path_to_file += '.m3u'
         self._logger.info("Saving m3u file: {}".format(path_to_file))
         with codecs.open(path_to_file, 'w', 'utf-8') as f:

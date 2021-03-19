@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Union
 
 
@@ -7,16 +8,18 @@ class Title(str):
 
 class Titleable:
     def __init__(self, title: Title = ''):
-        self._title = title
-        self._lowered_title = title.lower()
+        self.title = title
 
     @property
     def title(self):
         return self._title
 
-    @property
-    def lowered_title(self):
-        return self._lowered_title
+    def is_same_title(self, title: Title):
+        return self.title.lower() == title.lower()
+
+    @title.setter
+    def title(self, value):
+        self._title = value
 
     def __str__(self):
         return self.title
@@ -55,3 +58,12 @@ class Track(Titleable):
             self._album = album_obj
         elif album is not None:
             raise AttributeError
+
+    @property
+    @abstractmethod
+    def track(self):
+        pass
+
+    def __repr__(self):
+        return f'{self.track} - {self.album}'
+
