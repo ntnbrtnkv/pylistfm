@@ -1,3 +1,4 @@
+import logging
 import os
 from typing import List, Optional, TypedDict, cast
 from mutagen import File, flac, mp3
@@ -30,6 +31,7 @@ class FileTrack(Track):
         self._bitrate: int = 0
         self._filesize: int = 0
         self._filename: str = ''
+        self._logger = logging.getLogger('FileTrack')
 
     def load_from_filepath(self, filepath: str):
         self.filepath = filepath
@@ -49,9 +51,16 @@ class FileTrack(Track):
         else:
             raise TypeError
         self._bitrate = info.bitrate
-        self._tags.titles = tags['title']
-        self._tags.albums = tags['album']
-        self.title = self._tags.titles[0]
+        tag_name = None
+        try:
+            tag_name = 'title'
+            self._tags.titles = tags[tag_name]
+            tag_name = 'album'
+            self._tags.albums = tags[tag_name]
+            self.title = self._tags.titles[0]
+        except KeyError as err:
+            self._logger.warning('Not found tag "{0}" in file "{1}"'.format(tag_name, filepath))
+            self._logger.debug(err)
         self.is_found = True
         self._filename = os.path.basename(filepath)
 
