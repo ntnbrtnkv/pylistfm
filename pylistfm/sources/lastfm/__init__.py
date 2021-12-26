@@ -1,6 +1,7 @@
 import pylast
 import logging
 from uuid import UUID
+from pylistfm.sound_utils import Album
 
 
 def validate_uuid4(uuid_string):
@@ -34,5 +35,5 @@ class API:
                 results.append((track.item.title, album.title))
             except AttributeError:
                 logging.warning('Cannot get album for track "{}"'.format(track.item.title))
-                results.append((track.item.title, "pylistfmError"))
+                results.append((track.item.title, Album.NOT_FOUND))
         return results

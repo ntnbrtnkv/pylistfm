@@ -52,7 +52,7 @@ class API:
         for ind, track in enumerate(track_list):
             if not track.is_found:
                 self._logger.warning(
-                    'Not found song [{}] "{} - {}" in your collection'.format(ind + 1, track.title, track.album.title))
+                    'Not found song [{}] "{} - {}" in your collection'.format(ind + 1, track.title, track.album))
                 if track.album not in suggested_albums:
                     suggested_albums[track.album] = []
                 suggested_albums[track.album].append('\t[{}] {}'.format(ind + 1, track.title))

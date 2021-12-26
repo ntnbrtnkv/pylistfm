@@ -26,7 +26,7 @@ class Titleable:
 
 
 class Album(str):
-    pass
+    NOT_FOUND = 'pylistfm:AlbumNotFound'
 
 
 class Track(Titleable):
