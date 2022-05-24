@@ -39,13 +39,21 @@ class API:
         local_tracks = TrackUtils.tracks_by_paths(local_filepaths)
         self._logger.info("Local music library has been loaded")
 
-        for local_track in local_tracks:
-            for track in track_list:
-                lowered_track_title = track.title
+        for track in track_list:
+            lowered_track_title = track.title
+            current_track = None
+            for local_track in local_tracks:
                 found = local_track.is_same_title(lowered_track_title)
+
                 if found:
-                    track.copy_info_from(local_track)
-                    self._logger.info('Found song "{0}" in your collection'.format(track.title))
+                    if current_track is None:
+                        current_track = local_track
+                    elif current_track < local_track:
+                        current_track = local_track
+
+            if current_track is not None:
+                track.copy_info_from(current_track)
+                self._logger.info('Found song "{0}" in your collection'.format(current_track.title))
 
     def _find_missing_albums(self, track_list: List[FileTrack]):
         suggested_albums = {}

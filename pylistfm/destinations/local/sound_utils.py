@@ -107,9 +107,16 @@ class FileTrack(Track):
 
     def __gt__(self, other: 'FileTrack'):
         if isinstance(other, FileTrack):
-            return (self.bitrate > other.bitrate or
-                    self.lowered_filename > other.lowered_filename or
-                    self.filesize > other.filesize)
+            if self.bitrate > other.bitrate:
+                return True
+            
+            if len(self.lowered_filename) < len(other.lowered_filename):
+                return True
+
+            return (
+                len(self.lowered_filename) == len(other.lowered_filename)
+                and self.filesize < other.filesize
+            )
         else:
             raise NotImplementedError
 
