@@ -4,7 +4,20 @@ from pathlib import Path
 from datetime import date
 import json
 from uuid import UUID
+from urllib import parse
+import chardet
 
+
+def detect_charset(filepath):
+    with open(filepath, 'rb') as file:
+        input_bytes = file.read()
+        result = chardet.detect(input_bytes)
+        return result['encoding'].lower()
+
+def create_hardlink(path, base_dir, dest, index):
+    filepath = '{}/{}'.format(base_dir, path)
+    filename = os.path.basename(filepath)
+    os.link(filepath, '{}/{:03d} - {}'.format(dest, index, filename))
 
 def validate_uuid4(uuid_string):
     try:
@@ -26,13 +39,17 @@ def create_hardlist(source):
         _logger.warning("Path not found '{}', creating directories".format(dest))
         os.makedirs(dest)
     _logger.info("Creating hardlinks in destination path")
-    with open(source, 'r', encoding='utf-8') as playlist_file:
+    charset = detect_charset(source)
+    _logger.info("detected charset for '{}' as {}".format(source, charset))
+    with open(source, 'r', encoding=charset) as playlist_file:
         tracks_files = filter(lambda line: line[0] != '#', list(playlist_file)[1:])
         for index, line in enumerate(tracks_files):
             path = line.rstrip('\n')
-            filepath = '{}/{}'.format(base_dir, path)
-            filename = os.path.basename(filepath)
-            os.link(filepath, '{}/{:03d} - {}'.format(dest, index, filename))
+            try:
+                create_hardlink(path, base_dir, dest, index)
+            except FileNotFoundError:
+                path = parse.unquote(path)
+                create_hardlink(path, base_dir, dest, index)
     _logger.info("Hardlist has been created")
 
 class CacheSource:
