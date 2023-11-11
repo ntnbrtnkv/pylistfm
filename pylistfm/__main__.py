@@ -1,8 +1,9 @@
 import argparse
 import logging
 import sys
+import os
 from pylistfm.modes import string_to_mode
-from pylistfm.config import Config
+from pylistfm.config import Config, default_filename
 from pylistfm.playlist import Playlist
 from pylistfm.utils import create_hardlist
 
@@ -52,6 +53,9 @@ if _args.debug:
 _logger.debug("Args %s", _args)
 
 if _args.init:
+    if os.path.isfile(default_filename):
+        _logger.error("File\" %s\" already exists. Delete it before reinitializing.", default_filename)
+        sys.exit(1)
     _config = Config()
     _config.init()
     _config.save()

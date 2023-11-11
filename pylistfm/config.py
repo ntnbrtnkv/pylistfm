@@ -21,7 +21,6 @@ class Config:
     def to_json(self):
         json_o = deepcopy(self)
         del json_o.pylistfm.mode
-        del json_o._filename
         return json.dumps(json_o, default=lambda o: o.__dict__, indent=4)
 
     def __str__(self):
