@@ -56,7 +56,9 @@ class Config:
                     "dir": "D:/Music",
                     "types": [
                         "mp3",
-                        "flac"
+                        "flac",
+                        "mp4",
+                        "m4a"
                     ],
                     "playlist_type": "m3u"
                 }

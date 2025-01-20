@@ -1,7 +1,7 @@
 import logging
 import os
 from typing import List, Optional, TypedDict, cast
-from mutagen import File, flac, mp3
+from mutagen import File, flac, mp3, mp4
 from pylistfm.sound_utils import Track, Title, Album
 
 
@@ -48,6 +48,13 @@ class FileTrack(Track):
             flac_data = flac.FLAC(filepath)
             tags = cast(TagsInfo, flac_data)
             info = cast(InfoBlock, flac_data.info)
+        elif 'audio/mp4' in mime:
+            mp4_data = mp4.MP4(filepath)
+            tags = {
+                "album": mp4_data.get("\xa9alb"),
+                "title": mp4_data.get("\xa9nam")
+            }
+            info = cast(InfoBlock, mp4_data.info)
         else:
             raise TypeError
         self._bitrate = info.bitrate
