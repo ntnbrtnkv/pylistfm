@@ -50,7 +50,13 @@ class Config:
             },
             "api": {
                 "lastfm": {
-                    "key": "YOU_API_KEY_HERE"
+                    "key": "YOU_API_KEY_HERE",
+                    
+                    "Source of getting top tracks, artist is got by API anyway": "html,api",
+                    "source": "html",
+                    
+                    "Date range for top tracks": "LAST_7_DAYS,LAST_30_DAYS,LAST_90_DAYS,LAST_180_DAYS,LAST_365_DAYS,ALL",
+                    "date_preset": "LAST_365_DAYS",
                 },
                 "local": {
                     "dir": "D:/Music",
