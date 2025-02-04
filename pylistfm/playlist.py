@@ -29,7 +29,7 @@ class Playlist:
             self._sources[_module] = api
             self._logger.info("Source api {0} added".format(_module))
 
-    def _get_tracks(self, artist):
+    def _get_tracks(self, artist, mbid):
         config = self.config
         result = {}
         cache = None
@@ -43,7 +43,7 @@ class Playlist:
                 request_result = cache.get(module_name, artist)
             else:
                 self._logger.info("Trying to get track from api {0}".format(module_name))
-                request_result = api(self.api_config[module_name]).get_top_tracks(artist, config.limit)
+                request_result = api(self.api_config[module_name]).get_top_tracks(artist, mbid, config.limit)
                 self._logger.info("Got tracks from api {0}".format(module_name))
                 if (cache is not None):
                     cache.save(module_name, artist, request_result)
@@ -51,13 +51,13 @@ class Playlist:
             result[module_name] = required_tracks
         return result
 
-    def create_playlist(self, artist, output=None):
+    def create_playlist(self, artist, output=None, mbid=None):
         now = datetime.datetime.now()
         now_date = now.strftime("%Y-%m-%d")
         actual_artist = None
 
         # Founding all possible files by name and ID3 tags
-        modules_tracks = self._get_tracks(artist)
+        modules_tracks = self._get_tracks(artist, mbid)
         if validate_uuid4(artist):
             actual_artist = output
         else:

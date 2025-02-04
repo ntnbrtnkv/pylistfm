@@ -53,11 +53,11 @@ class API:
         self.source = config['source']
         self.date_preset = config['date_preset']
 
-    def get_artist(self, artist_name):
+    def get_artist(self, artist_name, mbid):
         artist = None
 
-        if validate_uuid4(artist_name):
-            artist = self.network.get_artist_by_mbid(artist_name)
+        if mbid is not None and validate_uuid4(mbid):
+            artist = self.network.get_artist_by_mbid(mbid)
         else:
             request = self.network.search_for_artist(artist_name)
             artist = request.get_next_page()[0]
@@ -97,9 +97,9 @@ class API:
         return results[:limit]
         
 
-    def get_top_tracks(self, artist_name, limit=10):
+    def get_top_tracks(self, artist_name, mbid, limit=10):
         results = []
-        artist = self.get_artist(artist_name)
+        artist = self.get_artist(artist_name, mbid)
 
         if self.source == 'api':
             results = self.get_tracks_by_api(artist, limit)

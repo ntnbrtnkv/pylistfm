@@ -11,10 +11,10 @@ from pylistfm.utils import create_hardlist
 _config = None
 
 
-def _main(playlist, artist, output):
+def _main(playlist, artist, output, mbid):
     try:
         print('Start for {0}...'.format(artist))
-        playlist.create_playlist(artist, output)
+        playlist.create_playlist(artist, output, mbid)
         print('Complete!')
     except KeyboardInterrupt:
         print("Quitting...")
@@ -37,7 +37,8 @@ _parser.add_argument('-l', '--limit', help='tracks limit', type=int)
 _parser.add_argument('--dir', help='base dir to search')
 _parser.add_argument('--disable-cache', help='disable cache, false by default', action='store_true')
 _parser.add_argument('-c', '--config', help='path to config', type=str)
-_parser.add_argument('-a', '--artist', help='artist name or musicbrainz.org id')
+_parser.add_argument('-a', '--artist', help='artist name')
+_parser.add_argument('--mbid', help='musicbrainz.org id')
 _parser.add_argument('-o', '--output', help='alias for output dir', type=str)
 _parser.add_argument('-d', '--debug', help='debug mode', action='store_true')
 _parser.add_argument('-s', '--search-missing-albums', help='search missing albums', type=bool)
@@ -99,4 +100,4 @@ _parse_config_arg('search_missing_albums', _config.pylistfm)
 
 _logger.debug("After args: %s", _config)
 
-_main(Playlist(_config.pylistfm, _config.api), _artist, _args.output)
+_main(Playlist(_config.pylistfm, _config.api), _artist, _args.output, _args.mbid)
