@@ -5,6 +5,8 @@ from uuid import UUID
 from html.parser import HTMLParser
 from pylistfm.sound_utils import Album
 
+logger = logging.getLogger('pylistfm').getChild('lastfm')
+
 
 def validate_uuid4(uuid_string):
     try:
@@ -18,6 +20,7 @@ class TrackParser(HTMLParser):
     def __init__(self):
         super().__init__()
         self.in_tr = False
+        self.in_track = False
         self.current_track = {}
         self.tracks = []
 
@@ -25,12 +28,21 @@ class TrackParser(HTMLParser):
         attrs = dict(attrs)
         if tag == 'tr' and 'itemprop' in attrs and attrs['itemprop'] == 'track':
             self.in_tr = True
-        elif self.in_tr and 'data-track-name' in attrs:
-            self.current_track = {'track_name': attrs['data-track-name']}
+            self.current_track = {}
+        elif self.in_tr and tag == 'td' and 'itemprop' in attrs:
+            self.in_track = True
+        elif self.in_track and tag == 'a' and 'title' in attrs:
+            name = attrs['title']
+            self.current_track['track_name'] = name
+            logger.info('Found track name: {}'.format(name))
         elif self.in_tr and tag == 'img' and 'alt' in attrs:
-            self.current_track['album_name'] = attrs['alt']
+            album = attrs['alt']
+            self.current_track['album_name'] = album
+            logger.info('Found albumn for track: {}'.format(album))
 
     def handle_endtag(self, tag):
+        if tag == 'td' and self.in_track:
+            self.in_track = False
         if tag == 'tr' and self.in_tr:
             self.in_tr = False
             self.tracks.append(self.current_track)
@@ -50,7 +62,7 @@ class API:
             request = self.network.search_for_artist(artist_name)
             artist = request.get_next_page()[0]
 
-        logging.info('Found artist "{}"'.format(artist.name))
+        logger.info('Found artist "{}"'.format(artist.name))
         return artist
     
     def get_tracks_by_api(self, artist, limit):
@@ -61,7 +73,7 @@ class API:
             try:
                 results.append((track.item.title, album.title))
             except AttributeError:
-                logging.warning('Cannot get album for track "{}"'.format(track.item.title))
+                logger.warning('Cannot get album for track "{}"'.format(track.item.title))
                 results.append((track.item.title, Album.NOT_FOUND))
         return results
     
