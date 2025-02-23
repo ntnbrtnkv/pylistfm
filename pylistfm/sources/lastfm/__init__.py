@@ -79,16 +79,24 @@ class API:
     
     def get_tracks_by_html(self, artist, limit):
         results = []
+        tracks = []
+        page = 1
+        done = False
 
-        url = f'https://www.last.fm/music/{artist.name}/+tracks?date_preset={self.date_preset}'
-        response = requests.get(url)
-        response.raise_for_status()
-        html_content = response.text
-        parser = TrackParser()
-        parser.feed(html_content)
-        tracks = parser.tracks
+        while len(tracks) < limit and not done:
+            url = f'https://www.last.fm/music/{artist.name}/+tracks?date_preset={self.date_preset}&page={page}'
+            logger.info(f'Parsing: {url}')
+            response = requests.get(url)
+            response.raise_for_status()
+            html_content = response.text
+            parser = TrackParser()
+            parser.feed(html_content)
+            tracks.extend(parser.tracks)
+            logger.info(f'{len(parser.tracks)} tracks added, total: {len(tracks)}')
+            done = len(parser.tracks) == 0
+            page += 1
 
-        for track in tracks:
+        for track in tracks[:limit]:
             try:
                 results.append((track['track_name'], track['album_name']))
             except AttributeError:

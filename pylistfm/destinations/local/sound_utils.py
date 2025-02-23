@@ -31,10 +31,11 @@ class FileTrack(Track):
         self._bitrate: int = 0
         self._filesize: int = 0
         self._filename: str = ''
-        self._logger = logging.getLogger('FileTrack')
+        self._logger = logging.getLogger('pylistfm').getChild('FileTrack')
 
     def load_from_filepath(self, filepath: str):
         self.filepath = filepath
+        self._logger.info(f'Processing file at: {filepath}')
         self._filesize = os.stat(filepath).st_size
         file = File(filepath)
         mime = file.mime
