@@ -1,7 +1,7 @@
 import logging
 import os
 from typing import List, Optional, TypedDict, cast
-from mutagen import File, flac, mp3, mp4
+from mutagen import File, flac, mp3, mp4, wavpack
 from pylistfm.sound_utils import Track, Title, Album
 
 
@@ -56,9 +56,15 @@ class FileTrack(Track):
                 "title": mp4_data.get("\xa9nam")
             }
             info = cast(InfoBlock, mp4_data.info)
+        elif 'audio/x-wavpack' in mime:
+            wv_data = wavpack.WavPack(filepath)
+            tags = cast(TagsInfo, wv_data)
+            info = {
+                "bitrate": wv_data.info.bits_per_sample * wv_data.info.sample_rate
+            }
         else:
             raise TypeError
-        self._bitrate = info.bitrate
+        self._bitrate = info['bitrate']
         tag_name = None
         try:
             tag_name = 'title'

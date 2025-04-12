@@ -64,7 +64,8 @@ class Config:
                         "mp3",
                         "flac",
                         "mp4",
-                        "m4a"
+                        "m4a",
+                        "wv"
                     ],
                     "playlist_type": "m3u"
                 }
