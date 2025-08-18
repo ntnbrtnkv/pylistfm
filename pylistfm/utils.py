@@ -15,7 +15,7 @@ def detect_charset(filepath):
         return result['encoding'].lower()
 
 def create_hardlink(path, base_dir, dest, index):
-    filepath = '{}/{}'.format(base_dir, path)
+    filepath = path if os.path.isabs(path) else '{}/{}'.format(base_dir, path)
     filename = os.path.basename(filepath)
     os.link(filepath, '{}/{:03d} - {}'.format(dest, index, filename))
 
@@ -27,10 +27,11 @@ def validate_uuid4(uuid_string):
 
     return True
 
-def create_hardlist(source):
+def create_hardlist(source, base_directory, force_full_path):
     _logger = logging.getLogger('pylistfm')
     _logger.info("Creating hardlist for playlist: {}".format(source))
-    base_dir = os.path.dirname(source)
+    base_dir = base_directory if base_directory is not '' else os.path.dirname(source)
+    source_path = Path(source).absolute().parent
     source_basename = os.path.basename(source)
     source_filename = os.path.splitext(source_basename)[0]
     dest = '{}/{}'.format(base_dir, source_filename)
@@ -40,11 +41,13 @@ def create_hardlist(source):
         os.makedirs(dest)
     _logger.info("Creating hardlinks in destination path")
     charset = detect_charset(source)
+    base_for_tracks = 1
     _logger.info("detected charset for '{}' as {}".format(source, charset))
     with open(source, 'r', encoding=charset) as playlist_file:
         tracks_files = filter(lambda line: line[0] != '#', list(playlist_file)[1:])
         for index, line in enumerate(tracks_files):
             path = line.rstrip('\n')
+            path = '{}/{}'.format(source_path, path) if force_full_path else path
             try:
                 create_hardlink(path, base_dir, dest, index)
             except FileNotFoundError:

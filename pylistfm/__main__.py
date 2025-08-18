@@ -43,6 +43,8 @@ _parser.add_argument('-o', '--output', help='alias for output dir', type=str)
 _parser.add_argument('-d', '--debug', help='debug mode', action='store_true')
 _parser.add_argument('-s', '--search-missing-albums', help='search missing albums', type=bool)
 _parser.add_argument('-p', '--copy-playlist', help='create hardlist by path to m3u file', type=str)
+_parser.add_argument('--copy-playlist-base', help='base directory for --copy-playlist', type=str, default='')
+_parser.add_argument('--ffp', help='force full path for --copy-playlist', action="store_true")
 
 _args = _parser.parse_args()
 logging.basicConfig()
@@ -74,7 +76,7 @@ Please initialize config
     sys.exit(1)
 
 if _args.copy_playlist is not None:
-    create_hardlist(_args.copy_playlist)
+    create_hardlist(_args.copy_playlist, _args.copy_playlist_base, _args.ffp)
     sys.exit(0)
 
 if _args.artist is None:
